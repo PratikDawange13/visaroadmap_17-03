@@ -54,7 +54,7 @@ class NOCRecommendationList(BaseModel):
     recommendations: List[NOCRecommendation]
 
 # Load NOC codes from PDF (adjust file path accordingly)
-file_path = "nocs (3).pdf"  # Path to your PDF file
+file_path = "nocs (4).pdf"  # Path to your PDF file
 loader = PyPDFLoader(file_path)  # Use PyPDFLoader instead of CSVLoader
 documents = loader.load()
 
