@@ -18,9 +18,9 @@ from typing import List, Optional
 load_dotenv()
 
 # Initialize LLMs and embeddings
-llm_job_roles = ChatOpenAI(model="gpt-4o")
-llm_crs_score = ChatOpenAI(model="gpt-4o",temperature=0.2)
-llm_roadmap = ChatOpenAI(model="gpt-4o",temperature=0.6)
+llm_job_roles = ChatOpenAI(model="gpt-4.1")
+llm_crs_score = ChatOpenAI(model="gpt-4.1",temperature=0.2)
+llm_roadmap = ChatOpenAI(model="gpt-4.1",temperature=0.6)
 # Add a new LLM instance for filtering if needed, or reuse one
 llm_filter = ChatOpenAI(model="gpt-4o", temperature=0)
 

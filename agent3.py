@@ -1,5 +1,5 @@
 import os
-from prompt import system_prompt, crs_calculation_prompt, filtering_prompt_template
+from prompt import system_prompt, crs_calculation_prompt, additional_notes_prompt, determine_job_roles_prompt
 from typing import List, Dict, Any
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
@@ -33,6 +33,7 @@ class GraphState(TypedDict):
     job_roles: str
     noc_codes: str
     crs_score: str
+    additional_notes: str  # <-- Add this line
     roadmap: str
 
 # Load NOC codes from PDF (adjust file path accordingly)
@@ -50,35 +51,10 @@ noc_db = FAISS.from_documents(texts, embeddings)
 # Define node functions (same as before)
 def determine_job_roles(state):
     questionnaire = state["questionnaire"]
-    job_roles_list = """Dentist, Dietitian, Nutritionist, Family Physician, General Practitioner, Medical Doctor, Resident Doctor, Medical Laboratory Assistant, Medical Laboratory Technologist, Medical Laboratory Scientist, Nurse Assistant, Nurse Aide, Optometrist, Pharmacist, Pharmacy Assistant, Registered Nurse, Nurse, Veterinarian, Social Service Worker, Butcher, Retail Butcher, Architectural Manager, Architectural Service Manager, Landscape Architecture Manager, Scientific Research Manager, Civil Engineer, Construction Engineer, Consulting Civil Engineer, Cybersecurity Analyst, Cybersecurity Specialist, Network Security Analyst, Systems Security Analyst, Electrical Engineer, Electronics Engineer, Mechanical Engineer, Project Mechanical Engineer, Classroom Assistant, Teacher's Assistant, Early Childhood Assistant, Primary School Teacher, Elementary School Teacher, Secondary School Teacher, Subject Teacher, Construction Project Manager, Construction Site Manager, Cook, Quantity Surveyor, Bricklayer, Furniture Cabinetmaker, Cabinetmaker, Gas Servicer, Gas Technician, Plumber, Industrial Electrician, Electrician, Floor Tiler, Rug Layer, Wood Floor Installer, Painter, Decorator, Building Painter."""
+   
 
     prompt = ChatPromptTemplate.from_template(
-            f"""You are an immigration consultant helping a client.
-            Based ONLY on the following client questionnaire, determine the MOST SUITABLE job roles for immigration purposes.
-
-            **IMPORTANT RULES:**
-            - You MUST ONLY pick job roles from this approved list: {job_roles_list}
-            - The selected job roles should match the client's education, work experience, or transferable skills.
-            - If the client’s profile fits multiple roles, recommend multiple.
-            - If no direct match is found, you MUST select the CLOSEST possible job roles based on skills transferability and reasonable career transition.
-            - Always prioritize recommending roles that would realistically suit the client's professional background and abilities.
-
-            **VERY IMPORTANT STRUCTURE RULES:**
-            - STRICTLY list the roles as:
-                - Role Name: Reason
-            - Each role must start with a dash (`-`).
-            - No numbering like 1., 2., 3.
-            - No bold text (**).
-            - No extra line breaks between roles.
-
-            **Example Output:**
-            - Subject Teacher: Based on the client's legal background, they could teach social studies.
-            - Secondary School Teacher: The client's communication skills are transferable to teaching roles.
-            - Social Service Worker: The client's law background fits advocacy and support roles.
-
-            Client Questionnaire:
-            {{questionnaire}}
-            """
+            determine_job_roles_prompt
             )
 
     chain = prompt | llm_job_roles | StrOutputParser()
@@ -156,36 +132,54 @@ def calculate_crs_score(state):
 
 def generate_roadmap(state):
     questionnaire = state["questionnaire"]
-    noc_codes_text = state["noc_codes"]  # now a single clean text block
+    noc_codes_text = state["noc_codes"]
     crs_score = state.get("crs_score", "")
-    
+    additional_notes = state.get("additional_notes", "")
+
     roadmap_prompt = system_prompt
     prompt = ChatPromptTemplate.from_template(roadmap_prompt)
     chain = prompt | llm_roadmap | StrOutputParser()
     roadmap = chain.invoke({
         "questionnaire": questionnaire,
         "noc_codes": noc_codes_text,
-        "crs_score": crs_score
+        "crs_score": crs_score,
+        "additional_notes": additional_notes  # <-- Pass this in!
     })
 
     state["roadmap"] = roadmap
     print("DEBUG: Generated final roadmap:", roadmap)
     return state
 
+def generate_additional_notes(state):
+    questionnaire = state["questionnaire"]
+    noc_codes = state["noc_codes"]
+    crs_score = state["crs_score"]
+
+    prompt = ChatPromptTemplate.from_template(
+        additional_notes_prompt
+    )
+    chain = prompt | llm_roadmap | StrOutputParser()
+    additional_notes = chain.invoke({
+        "questionnaire": questionnaire,
+        "noc_codes": noc_codes,
+        "crs_score": crs_score
+    })
+    state["additional_notes"] = additional_notes
+    return state
+
 # Define the graph
 workflow = StateGraph(GraphState)
-
-# Add nodes (removed filter_feasible_nocs)
 workflow.add_node("determine_job_roles", determine_job_roles)
 workflow.add_node("retrieve_noc_codes", retrieve_noc_codes)
 workflow.add_node("calculate_crs_score", calculate_crs_score)
+workflow.add_node("generate_additional_notes", generate_additional_notes)  # <-- Add this
 workflow.add_node("generate_roadmap", generate_roadmap)
 
-# Define edges (updated to skip filter_feasible_nocs)
 workflow.set_entry_point("determine_job_roles")
 workflow.add_edge("determine_job_roles", "retrieve_noc_codes")
 workflow.add_edge("retrieve_noc_codes", "calculate_crs_score")
-workflow.add_edge("calculate_crs_score", "generate_roadmap")
+workflow.add_edge("calculate_crs_score", "generate_additional_notes")  # <-- Add this
+workflow.add_edge("generate_additional_notes", "generate_roadmap")     # <-- Add this
 workflow.add_edge("generate_roadmap", END)
 
 # Compile the graph with interrupt
