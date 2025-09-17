@@ -2,7 +2,7 @@ import os
 from prompt import system_prompt
 from typing import List, Dict, Any
 from typing_extensions import TypedDict
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.output_parsers import StrOutputParser
@@ -15,14 +15,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Initialize LLMs and embeddings
-llm_job_roles = ChatOpenAI(model="gpt-4-turbo-preview")
-llm_noc_recommender = ChatOpenAI(model="gpt-4-turbo-preview", temperature=0.7)
-llm_crs_score = ChatOpenAI(model="gpt-4-turbo-preview", temperature=0.7)
-llm_roadmap = ChatOpenAI(model="gpt-4-turbo-preview", temperature=0.7)
-llm_pathways = ChatOpenAI(model="gpt-4-turbo-preview", temperature=0.7)
-llm_additional_recommendations = ChatOpenAI(model="gpt-4-turbo-preview", temperature=0.7)
+llm_job_roles = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
+llm_noc_recommender = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0.7)
+llm_crs_score = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0.7)
+llm_roadmap = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0.7)
+llm_pathways = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0.7)
+llm_additional_recommendations = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0.7)
 
-embeddings = OpenAIEmbeddings()
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
 from typing_extensions import TypedDict
 class GraphState(TypedDict):

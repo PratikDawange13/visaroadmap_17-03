@@ -1,12 +1,17 @@
 
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 import openai
-from agent3 import graph_app
+from agent4forCRS import graph_app
 #from demo import graph_app
 from prompt import travel_visa,study_visa,work_visa
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
+
+class RoadmapRequest(BaseModel):
+    questionnaire: str
+    roadmap_type: str
 
 app = FastAPI()
 
@@ -34,24 +39,24 @@ def get_roadmap_from_type(prompt):
 
 # Define API endpoint
 @app.post("/generate_roadmap")
-async def generate_visa_roadmap(questionnaire:str, roadmap_type:str):
-    if roadmap_type.lower() == "immigration visa":
+async def generate_visa_roadmap(request: RoadmapRequest):
+    if request.roadmap_type.lower() == "immigration visa":
         try:
-            result = graph_app.invoke({"questionnaire": questionnaire})
+            result = graph_app.invoke({"questionnaire": request.questionnaire})
             return result
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e)) 
            
-    elif roadmap_type.lower() == "study visa":
-        prompt = study_visa(questionnaire)
+    elif request.roadmap_type.lower() == "study visa":
+        prompt = study_visa(request.questionnaire)
         return get_roadmap_from_type(prompt)
     
-    elif roadmap_type.lower() == "travel visa":
-        prompt = travel_visa(questionnaire)
+    elif request.roadmap_type.lower() == "travel visa":
+        prompt = travel_visa(request.questionnaire)
         return get_roadmap_from_type(prompt)
 
-    elif roadmap_type.lower() == "work visa":
-        prompt = work_visa(questionnaire)
+    elif request.roadmap_type.lower() == "work visa":
+        prompt = work_visa(request.questionnaire)
         return get_roadmap_from_type(prompt)
 
     else:

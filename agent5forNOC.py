@@ -1,7 +1,7 @@
 import os
 from prompt import system_prompt, CRS_prompt
 from typing import List, Dict, Any
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import PyPDFLoader  # Change to PDF loader
 from langchain_core.output_parsers import StrOutputParser
@@ -14,12 +14,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Initialize LLMs and embeddings
-llm_job_roles = ChatOpenAI(model="gpt-4o")
-llm_noc_recommender = ChatOpenAI(model="gpt-4o", temperature=0.2)  # New LLM for NOC recommendations
-llm_crs_score = ChatOpenAI(model="gpt-4o",temperature=0.3)
-llm_roadmap = ChatOpenAI(model="gpt-4o",temperature=0.6)
-llm_pathways = ChatOpenAI(model="gpt-4o", temperature=0.4)
-embeddings = OpenAIEmbeddings()
+llm_job_roles = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
+llm_noc_recommender = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0.2)  # New LLM for NOC recommendations
+llm_crs_score = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp",temperature=0.3)
+llm_roadmap = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp",temperature=0.6)
+llm_pathways = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0.4)
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
 from typing_extensions import TypedDict
 class GraphState(TypedDict):

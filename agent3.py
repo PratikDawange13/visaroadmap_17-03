@@ -1,7 +1,7 @@
 import os
 from prompt import system_prompt, crs_calculation_prompt, filtering_prompt_template
 from typing import List, Dict, Any
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import PyPDFLoader  # Change to PDF loader
 from langchain_core.output_parsers import StrOutputParser
@@ -17,13 +17,13 @@ from typing import List, Optional
 load_dotenv()
 
 # Initialize LLMs and embeddings
-llm_job_roles = ChatOpenAI(model="gpt-4o")
-llm_crs_score = ChatOpenAI(model="gpt-4o",temperature=0.2)
-llm_roadmap = ChatOpenAI(model="gpt-4o",temperature=0.6)
+llm_job_roles = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
+llm_crs_score = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp",temperature=0.2)
+llm_roadmap = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp",temperature=0.6)
 # Add a new LLM instance for filtering if needed, or reuse one
-llm_filter = ChatOpenAI(model="gpt-4o", temperature=0)
+llm_filter = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0)
 
-embeddings = OpenAIEmbeddings()
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
 from typing_extensions import TypedDict
 class GraphState(TypedDict):
@@ -103,7 +103,7 @@ def retrieve_noc_codes(state):
     return state
 
 # Add a new LLM instance for filtering if needed, or reuse one
-llm_filter = ChatOpenAI(model="gpt-4o", temperature=0)
+llm_filter = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0)
 # You might need to import re if not already done globally
 import re
 import ast # For parsing LLM string output - use JSON/Pydantic parser for production

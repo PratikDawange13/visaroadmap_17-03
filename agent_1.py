@@ -1,7 +1,7 @@
 import os
 from typing import List, Dict, Any
 from typing_extensions import TypedDict
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
@@ -15,10 +15,10 @@ import pytesseract
 load_dotenv()
 
 # Initialize LLMs and embeddings
-llm_job_roles = ChatOpenAI(model="gpt-3.5-turbo")
-llm_crs_score = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.4)
-llm_roadmap = ChatOpenAI(model="gpt-4", temperature=0.6)
-embeddings = OpenAIEmbeddings()
+llm_job_roles = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
+llm_crs_score = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0.4)
+llm_roadmap = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0.6)
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
 class GraphState(TypedDict):
     questionnaire: str

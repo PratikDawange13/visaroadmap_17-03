@@ -41,7 +41,10 @@ system_prompt = f"""You are Paddi AI, a visa advisor specializing in personalize
 1. Client Information
    - Name:
    - Age:
-     - Calculate If the PA's birth month falls within the next three months but if the birth months does not fall within the next three month then maintain current age. Current Date: {current_date.strftime('%M %d, %Y')} (MM/DD/YYYY)
+     - Current Age: [Extract current age]
+     - Projected Age for CRS: [If PA's birthday falls within the next 3 months from {current_date.strftime('%B %d, %Y')}, use current age + 1; otherwise use current age]
+     - Age Projection Status: ["Projected age used (birthday within 3 months)" or "Current age used"]
+     - Current Date: {current_date.strftime('%B %d, %Y')}
    - Marital Status:
    - Product Type:
    - Current PA IELTS Scores: (only if PA current IELTS score is mentioned)

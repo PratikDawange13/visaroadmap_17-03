@@ -1,152 +1,10 @@
-# def calculate_exact_crs_score(questionnaire_data):
-#     """
-#     Calculate CRS score based on official criteria
-#     Expected questionnaire_data should be a dictionary with these keys:
-#     - age: int
-#     - education: str
-#     - first_language: dict with 'speaking', 'listening', 'reading', 'writing' CLB levels
-#     - work_experience: int (years)
-#     - canadian_work_experience: int (years)
-#     - education_in_canada: bool
-#     - arranged_employment: bool
-#     - provincial_nomination: bool
-#     - spouse: bool
-#     - spouse_education: str (if applicable)
-#     - spouse_language: dict (if applicable)
-#     - spouse_work_experience: int (if applicable)
-#     """
-#     score = 0
-    
-#     # Core / Human Capital Factors (max 460 points)
-    
-#     # Age (max 110 points)
-#     age_points = {
-#         18: 90, 19: 95, 20: 100, 21: 100, 22: 100, 23: 100, 24: 100, 25: 100, 26: 100, 27: 100, 
-#         28: 100, 29: 100, 30: 95, 31: 90, 32: 85, 33: 80, 34: 75, 35: 70, 36: 65, 37: 60, 
-#         38: 55, 39: 50, 40: 45, 41: 40, 42: 35, 43: 30, 44: 25, 45: 20, 46: 15, 47: 10, 48: 5, 49: 0
-#     }
-#     score += age_points.get(questionnaire_data['age'], 0)
-#     if questionnaire_data.get('arranged_employment'):
-#         score += 50
-#     if questionnaire_data.get('education_in_canada'):
-#         score += 30
+from datetime import datetime, date, timedelta
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_google_genai import ChatGoogleGenerativeAI
 
-#     # Canadian Work Experience
-#     canadian_exp_points = {
-#         1: 40, 2: 53, 3: 64, 4: 72, 5: 80
-#     }
-#     score += canadian_exp_points.get(min(questionnaire_data.get('canadian_work_experience', 0), 5), 0)
-
-#     return score
-
-# def calculate_crs_score(state):
-#     questionnaire = state["questionnaire"]
-    
-#     # Extract detailed information from questionnaire using LLM
-#     extract_data_prompt = """
-#     Based on the questionnaire, extract the following information in a structured format:
-    
-#     1. Core/Human Capital Factors:
-#     - Exact age
-#     - Education level (be specific about years and type)
-#     - First official language scores (CLB levels for reading, writing, speaking, listening)
-#     - Second official language scores (if applicable)
-#     - Canadian work experience (years)
-    
-#     2. Spouse Factors (if applicable):
-#     - Education level
-#     - Language scores
-#     - Canadian work experience
-    
-#     3. Skill Transferability:
-#     - Foreign work experience
-#     - Canadian educational credentials
-#     - Certificate of qualification (for trades)
-    
-#     4. Additional Points:
-#     - Provincial nomination
-#     - Arranged employment (specify NOC TEER)
-#     - Canadian education
-#     - French language ability
-#     - Sibling in Canada
-    
-#     Questionnaire: {questionnaire}
-    
-#     Return the information in a clear, structured format.
-#     """
-    
-#     # Use the existing crs_calculator.py functions
-#     from crs_calculator import calculate_exact_crs_score, parse_questionnaire_input
-    
-#     # Get structured data from LLM
-#     chain = ChatPromptTemplate.from_template(extract_data_prompt) | llm_crs_score | StrOutputParser()
-#     structured_data = chain.invoke({"questionnaire": questionnaire})
-    
-#     # Parse the structured data
-#     parsed_data = parse_questionnaire_input(structured_data)
-    
-#     # Calculate final score using the comprehensive criteria
-#     final_score = calculate_exact_crs_score(parsed_data)
-    
-#     state["crs_score"] = str(final_score)
-#     return state
-
-
-# def parse_questionnaire_input():
-#     """Helper function to gather and structure questionnaire data from user input"""
-#     questionnaire_data = {}
-    
-#     questionnaire_data['age'] = int(input("Enter your age: "))
-    
-#     education_map = {
-#         '1': 'secondary',
-#         '2': 'one_year_degree',
-#         '3': 'two_year_degree',
-#         '4': 'three_year_degree',
-#         '5': 'two_or_more_degrees',
-#         '6': 'masters',
-#         '7': 'phd'
-#     }
-#     print("\nSelect your highest level of education:")
-#     print("1. Secondary diploma (high school)")
-#     print("2. One-year degree/diploma/certificate")
-#     print("3. Two-year program")
-#     print("4. Bachelor's degree or three year program")
-#     print("5. Two or more degrees (one being 3+ years)")
-#     print("6. Master's degree")
-#     print("7. Doctoral degree (Ph.D.)")
-#     edu_choice = input("Enter the number of your choice: ")
-#     questionnaire_data['education'] = education_map.get(edu_choice, 'secondary')
-
-#     # Language scores
-#     questionnaire_data['first_language'] = {}
-#     print("\nEnter your CLB levels for first language (4-10):")
-#     for skill in ['speaking', 'listening', 'reading', 'writing']:
-#         questionnaire_data['first_language'][skill] = int(input(f"{skill.capitalize()}: "))
-
-#     questionnaire_data['work_experience'] = int(input("\nEnter your years of work experience: "))
-#     questionnaire_data['canadian_work_experience'] = int(input("Enter your years of Canadian work experience: "))
-    
-#     questionnaire_data['education_in_canada'] = input("\nDo you have education from Canada? (yes/no): ").lower() == 'yes'
-#     questionnaire_data['arranged_employment'] = input("Do you have arranged employment in Canada? (yes/no): ").lower() == 'yes'
-#     questionnaire_data['provincial_nomination'] = input("Do you have a provincial nomination? (yes/no): ").lower() == 'yes'
-
-#     return questionnaire_data
-
-
-#     print("Welcome to the CRS Calculator")
-#     print("-----------------------------")
-    
-#     questionnaire_data = parse_questionnaire_input()
-#     total_score = calculate_exact_crs_score(questionnaire_data)
-    
-#     print(f"\nYour estimated CRS score is: {total_score}")
-
-# if __name__ == "__main__":
-#     main()
-
-
-from datetime import datetime, date
+# Initialize LLM for CRS calculations
+llm_crs_score = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0.4)
 
 def calculate_age(birth_date_str):
     """
@@ -160,15 +18,79 @@ def calculate_age(birth_date_str):
     except ValueError:
         return None
 
+def calculate_projected_age(birth_date_str, reference_date=None):
+    """
+    Calculate projected age considering if birthday falls within 3 months.
+    If birthday is within next 3 months, use the upcoming age for CRS calculations.
+    
+    Args:
+        birth_date_str: Birth date in YYYY-MM-DD format
+        reference_date: Reference date for calculation (defaults to today)
+    
+    Returns:
+        dict: {
+            'current_age': int,
+            'projected_age': int,
+            'is_projected': bool,
+            'birthday_within_3_months': bool,
+            'next_birthday': date
+        }
+    """
+    try:
+        birth_date = datetime.strptime(birth_date_str, '%Y-%m-%d').date()
+        ref_date = reference_date or date.today()
+        
+        # Calculate current age
+        current_age = ref_date.year - birth_date.year - ((ref_date.month, ref_date.day) < (birth_date.month, birth_date.day))
+        
+        # Calculate next birthday (handle leap year edge case)
+        try:
+            next_birthday = birth_date.replace(year=ref_date.year)
+        except ValueError:
+            # Handle Feb 29 in non-leap years - use Feb 28 instead
+            next_birthday = birth_date.replace(year=ref_date.year, day=28)
+        
+        if next_birthday < ref_date:
+            try:
+                next_birthday = next_birthday.replace(year=ref_date.year + 1)
+            except ValueError:
+                # Handle Feb 29 in non-leap years for next year
+                next_birthday = birth_date.replace(year=ref_date.year + 1, day=28)
+        
+        # Check if birthday is within 3 months (90 days)
+        days_to_birthday = (next_birthday - ref_date).days
+        birthday_within_3_months = days_to_birthday <= 90
+        
+        # Calculate projected age
+        projected_age = current_age + 1 if birthday_within_3_months else current_age
+        
+        return {
+            'current_age': current_age,
+            'projected_age': projected_age,
+            'is_projected': birthday_within_3_months,
+            'birthday_within_3_months': birthday_within_3_months,
+            'next_birthday': next_birthday,
+            'days_to_birthday': days_to_birthday
+        }
+    except ValueError:
+        return None
+
 def calculate_exact_crs_score(questionnaire_data):
     today = date.today()
     current_date = datetime.now()
     
-    # If birth date is provided, calculate exact age
+    # If birth date is provided, calculate projected age
     birth_date = questionnaire_data.get('birth_date')
+    age_info = None
     if birth_date:
-        age = calculate_age(birth_date)
-        questionnaire_data['age'] = age
+        age_info = calculate_projected_age(birth_date, today)
+        if age_info:
+            # Use projected age for CRS calculations
+            questionnaire_data['age'] = age_info['projected_age']
+            questionnaire_data['current_age'] = age_info['current_age']
+            questionnaire_data['is_age_projected'] = age_info['is_projected']
+            questionnaire_data['birthday_within_3_months'] = age_info['birthday_within_3_months']
+            questionnaire_data['days_to_birthday'] = age_info['days_to_birthday']
     
     # Add timestamp to the calculation
     questionnaire_data['calculation_date'] = current_date.strftime('%Y-%m-%d %H:%M:%S')
@@ -180,7 +102,7 @@ def calculate_crs_score(state):
     questionnaire = state["questionnaire"]
     current_date = datetime.now()
     
-    # Update the extract data prompt to include birth date
+    # Update the extract data prompt to include birth date and projected age logic
     extract_data_prompt = ChatPromptTemplate.from_template("""
     Current Date: {current_date}
     
@@ -194,8 +116,13 @@ def calculate_crs_score(state):
     - Arranged employment (yes/no)
     - Provincial nomination (yes/no)
     
+    IMPORTANT: For age calculation, if the person's birthday falls within the next 3 months from {current_date}, 
+    we will use their upcoming age (current age + 1) for CRS scoring purposes. This projected age approach 
+    helps optimize CRS scores for immigration applications.
+    
     Also calculate:
-    - Age as of {current_date}
+    - Current age as of {current_date}
+    - Projected age (add 1 year if birthday is within 3 months)
     - Work experience duration up to {current_date}
     - Language test validity (tests should be less than 2 years old)
     
@@ -211,9 +138,19 @@ def calculate_crs_score(state):
     parsed_data = parse_llm_response(structured_data)
     exact_score = calculate_exact_crs_score(parsed_data)
     
-    # Add calculation metadata
+    # Add calculation metadata including age projection info
     state["crs_score"] = str(exact_score)
     state["score_calculation_date"] = current_date.strftime('%Y-%m-%d %H:%M:%S')
+    
+    # Add age projection metadata to state for roadmap generation
+    if parsed_data.get('is_age_projected'):
+        state["age_projection_used"] = True
+        state["current_age"] = parsed_data.get('current_age')
+        state["projected_age"] = parsed_data.get('age')
+        state["days_to_birthday"] = parsed_data.get('days_to_birthday')
+    else:
+        state["age_projection_used"] = False
+    
     return state
 
 def parse_llm_response(structured_data: str) -> dict:

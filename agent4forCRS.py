@@ -1,7 +1,7 @@
 import os
 from prompt import system_prompt
 from typing import List, Dict, Any
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import PyPDFLoader  # Change to PDF loader
 from langchain_core.output_parsers import StrOutputParser
@@ -14,10 +14,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Initialize LLMs and embeddings
-llm_job_roles = ChatOpenAI(model="gpt-4-turbo-preview")
-llm_crs_score = ChatOpenAI(model="gpt-4-turbo-preview",temperature=0.4)
-llm_roadmap = ChatOpenAI(model="gpt-4-turbo-preview",temperature=0.1)
-embeddings = OpenAIEmbeddings()
+llm_job_roles = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
+llm_crs_score = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp",temperature=0.4)
+llm_roadmap = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp",temperature=0.1)
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
 from typing_extensions import TypedDict
 class GraphState(TypedDict):
@@ -74,15 +74,20 @@ def retrieve_noc_codes(state):
 
 def calculate_crs_score(state):
     from datetime import datetime
+    from crs_calculator import calculate_projected_age
     current_date = datetime.now()
     
     questionnaire = state["questionnaire"]
     
     crs_calculation_prompt = f"""You are a CRS (Comprehensive Ranking System) calculator for Canadian immigration. Your job is to calculate ACCURATE scores and provide MULTIPLE SCENARIOS when information is uncertain.
 
+IMPORTANT AGE CALCULATION RULE:
+If the client's birthday falls within the next 3 months from {current_date.strftime('%B %d, %Y')}, use their upcoming age (current age + 1) for CRS calculations. This projected age approach helps optimize CRS scores for immigration applications.
+
 STEP 1: EXTRACT ALL CLIENT INFORMATION
 Carefully analyze the questionnaire and identify ALL of these factors:
-- Age (given in MM/DD/YYYY, exact age as of {current_date.strftime('%M %d, %Y')})
+- Birth date (extract in YYYY-MM-DD format if available)
+- Current age and projected age (add 1 year if birthday is within 3 months of {current_date.strftime('%B %d, %Y')})
 - Education level (all credentials mentioned)
 - Language proficiency (all test scores or projected scores)
 - Work experience (years and type)
